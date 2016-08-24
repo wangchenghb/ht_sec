@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/security
+    http://www.springframework.org/schema/security/spring-security.xsd">
+
+	<!--静态资源放行 -->
+	<http pattern="/staticfile/**" security="none"></http>
+
+	<!--放行登陆页面 -->
+	<http pattern="/login.jsp" security="none"></http>
+	
+	<!--访问无权限页面时提示页面，代替403提示页面  -->
+	<http pattern="/accessDenied.jsp" security="none"></http>
+
+	<global-method-security jsr250-annotations="enabled"></global-method-security>
+
+	<http 
+		access-denied-page="/accessDenied.jsp"
+		use-expressions="true" 
+		entry-point-ref="authEntryPoint"
+		
+		>
+		<intercept-url pattern="/index.jsp" access="hasRole('ROLE_USER')" />
+		<intercept-url pattern="/**" access="hasRole('ROLE_USER')" />
+		<custom-filter ref="myFilter" position="FORM_LOGIN_FILTER"  />
+		 
+	</http>
+	
+	<!-- AuthenticationEntryPoint，引导用户进行登录 -->
+	<beans:bean id="authEntryPoint"
+		class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+		<beans:property name="loginFormUrl" value="/login.jsp" />
+	</beans:bean>
+	
+	<!-- 认证过滤器 -->
+	<beans:bean id="myFilter" class="filter.myFilter_">
+		<beans:property name="authenticationManager" ref="authenticationManagerBean" />
+		<!--失败时调用  -->
+		<beans:property name="authenticationFailureHandler" ref="exce"></beans:property>
+		<!--成功时调用  -->
+		<beans:property name="authenticationSuccessHandler" ref="save"></beans:property>
+
+		
+	</beans:bean>
+	
+	<!--认证管理器  -->
+	<authentication-manager alias="authenticationManagerBean">
+		<authentication-provider user-service-ref="userSecService">
+			<password-encoder hash="md5">
+				<salt-source user-property="username" />
+			</password-encoder>
+		</authentication-provider>
+		
+	</authentication-manager>
+	
+	<beans:bean id="save" class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
+		<beans:property name="defaultTargetUrl" value="/index" ></beans:property>
+	</beans:bean>
+	
+		
+	<!-- 认证异常处理 -->
+	<beans:bean id="exce"
+		class="org.springframework.security.web.authentication.ExceptionMappingAuthenticationFailureHandler">
+		<beans:property name="exceptionMappings">
+			<beans:map>
+				<!-- 用户不存在 -->
+				<beans:entry
+					key="org.springframework.security.core.userdetails.UsernameNotFoundException"
+					value="/login.jsp?sign=1" />
+				<!-- 凭证错误(密码不正确) -->
+				<beans:entry
+					key="org.springframework.security.authentication.BadCredentialsException"
+					value="/login.jsp?sign=2" />
+				<!-- 用户不可用 -->
+				<beans:entry
+					key="org.springframework.security.authentication.DisabledException"
+					value="/login.jsp?sign=3" />
+				<!-- 登陆凭证错误 -->
+				<beans:entry
+					key="org.springframework.security.core.AuthenticationException"
+					value="/login.jsp?sign=4" />
+				<!--  -->
+				<beans:entry
+					key="org.springframework.security.authentication.InternalAuthenticationServiceException"
+					value="/login.jsp?sign=5" />
+				<!--   自定义异常   用户输入为空  -->	
+				<beans:entry
+					key="filter.MyRuntimeException"
+					value="/login.jsp?sign=6" />	
+					
+			</beans:map>
+		</beans:property>
+	</beans:bean>
+
+</beans:beans>
+

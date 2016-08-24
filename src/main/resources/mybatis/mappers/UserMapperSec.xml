@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.UserSecMapper">
+	<!--根据用户username查询权限集合 -->
+	<select id="getModuleByUsername" parameterType="string" resultType="list">
+	SELECT * FROM module_p WHERE module_id IN(   
+                SELECT DISTINCT module_id FROM role_module_p  S1   
+                JOIN role_user_p S2 ON S1.ROLE_ID = S2.ROLE_ID   
+                JOIN user_p S3 ON S3.USER_ID = S2.USER_ID AND S3.USERNAME=#{username})
+	</select>
+
+	<resultMap type="pojo.UserSec" id="UserSecRM">
+		<id property="userId" column="user_id" />
+		<result property="deptId" column="dept_id" />
+		<result property="username" column="username" />
+		<result property="password" column="password" />
+		<result property="state" column="state" />
+		<result property="createBy" column="cteate_by" />
+		<result property="creatDept" column="create_dept" />
+		<result property="updateBy" column="update_by" />
+		<result property="createTime" column="create_time" />
+		<result property="updateTime" column="update_time" />
+
+		<association property="dept" javaType="pojo.Dept">
+			<id property="deptId" column="dept_id" />
+			<result property="deptName" column="DEPT_NAME" />
+		</association>
+
+		<association property="userInfo" javaType="pojo.UserInfo">
+			
+			<id property="userInfoId" column="USER_INFO_ID" />
+			<result property="name" column="NAME" />
+			<result property="cardNo" column="CARD_NO" />
+			<result property="managerId" column="MANAGER_ID" />
+			<result property="joinDate" column="JOIN_DATE" />
+			<result property="salary" column="SALARY" />
+			<result property="birthday" column="BIRTHDAY" />
+			<result property="gender" column="GENDER" />
+			<result property="station" column="STATION" />
+			<result property="telephone" column="TELEPHONE" />
+			<result property="userLevel" column="USER_LEVEL" />
+			<result property="remark" column="REMARK" />
+			<result property="orderNo" column="ORDER_NO" />
+
+			<association property="manager" javaType="pojo.UserInfo">
+				<id property="userInfoId" column="mid" />
+				<result property="name" column="mname" />
+			</association>
+		</association>
+	</resultMap>
+
+	<!--根据用户username查询用户 -->
+	<select id="getByUsername" resultMap="UserSecRM" parameterType="string">
+	select * from user_p where username = #{username}
+	</select>
+
+</mapper>

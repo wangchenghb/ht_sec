@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/security
+    http://www.springframework.org/schema/security/spring-security.xsd">
+
+	<!--静态资源放行 -->
+	<http pattern="/staticfile/**" security="none"></http>
+
+	<!--放行登陆页面 -->
+	<http pattern="/login.jsp" security="none"></http>
+
+	<http pattern="/favicon.jsp" security="none"></http>
+
+	<http pattern="/accessDenied.jsp" security="none"></http>
+
+	<global-method-security jsr250-annotations="enabled"></global-method-security>
+
+	<http auto-config="true" access-denied-page="/accessDenied.jsp"
+		use-expressions="true">
+		<intercept-url pattern="/index.jsp" access="hasRole('ROLE_USER')" />
+		<intercept-url pattern="/**" access="hasRole('ROLE_USER')" />
+		<form-login login-page="/login.jsp" default-target-url="/index"
+			always-use-default-target="true"
+			authentication-failure-handler-ref="exceptionMappingAuthenticationFailureHandler" />
+	</http>
+
+	<authentication-manager>
+		<authentication-provider user-service-ref="userSecService">
+			<password-encoder hash="md5">
+				<salt-source user-property="username" />
+			</password-encoder>
+		</authentication-provider>
+	</authentication-manager>
+
+	<beans:bean id="cachingUserDetailsService"
+		class="org.springframework.security.config.authentication.CachingUserDetailsService">
+		<beans:constructor-arg ref="userSecService" />
+		<beans:property name="userCache">
+			<beans:bean
+				class="org.springframework.security.core.userdetails.cache.EhCacheBasedUserCache">
+				<beans:property name="cache" ref="ehcache4UserDetails"></beans:property>
+			</beans:bean>
+		</beans:property>
+	</beans:bean>
+	<beans:bean id="ehcache4UserDetails"
+		class="org.springframework.cache.ehcache.EhCacheFactoryBean" />
+
+	<!-- 认证异常处理 -->
+	<beans:bean id="exceptionMappingAuthenticationFailureHandler"
+		class="org.springframework.security.web.authentication.ExceptionMappingAuthenticationFailureHandler">
+		<beans:property name="exceptionMappings">
+			<beans:map>
+				<!-- 用户不存在 -->
+				<beans:entry
+					key="org.springframework.security.core.userdetails.UsernameNotFoundException"
+					value="/login.jsp?sign=1" />
+					
+				<!-- 凭证错误(密码不正确) -->
+				<beans:entry
+					key="org.springframework.security.authentication.BadCredentialsException"
+					value="/login.jsp?sign=2" />
+					
+				<!-- 用户不可用 -->
+				<beans:entry
+					key="org.springframework.security.authentication.DisabledException"
+					value="/login.jsp?sign=3" />
+					
+				<!-- 登陆凭证错误 -->
+				<beans:entry
+					key="org.springframework.security.core.AuthenticationException"
+					value="/login.jsp?sign=4" />
+
+				<beans:entry
+					key="org.springframework.security.authentication.InternalAuthenticationServiceException"
+					value="/login.jsp?sign=5" />
+			</beans:map>
+		</beans:property>
+	</beans:bean>
+
+	<beans:bean
+		class="org.springframework.security.core.userdetails.cache.NullUserCache"></beans:bean>
+
+</beans:beans>
+
