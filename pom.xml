@@ -5,7 +5,7 @@
 	<artifactId>1604ht</artifactId>
 	<packaging>war</packaging>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>1604ht Maven Webapp</name>
+	<name>160s4ht Maven Webapp</name>
 	<url>http://maven.apache.org</url>
 	<!-- jar包说明： 1.Spring 2.SpringMVC 3.Mybatis 4.mybatis-spring 5.jdbc-spring 
 		6.jsp相关的 7.通用Mapper插件（对于单表的增删改查，不需要配置resultMap） 8.shiro 9.字符加密，解密 10.mybatis分页插件 
